@@ -46,7 +46,12 @@ public class BlockScript : MonoBehaviour
 
     protected virtual void HandleBallHit(BallScript ball)
     {
-        hitsToDestroy -= ball.damage;
+        ApplyHit(ball.damage);
+    }
+
+    public virtual void ApplyHit(int damage)
+    {
+        hitsToDestroy -= damage;
 
         if (hitsToDestroy <= 0)
             DestroyBlock();

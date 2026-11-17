@@ -13,7 +13,7 @@ public class SimpleBonus : BonusBase
     {
         var playerScript = GetPlayerScript();
         if (playerScript != null)
-            playerScript.SetSticky(false);
+            playerScript.ResetPaddleModes();
         Destroy(gameObject);
     }
 }

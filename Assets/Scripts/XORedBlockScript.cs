@@ -34,7 +34,7 @@ public class XORedBlockScript : BlockScript
         return markedX ? "X" : "O";
     }
 
-    protected override void HandleBallHit(BallScript ball)
+    public override void ApplyHit(int damage)
     {
         markedX = !markedX;
         RefreshLabel();

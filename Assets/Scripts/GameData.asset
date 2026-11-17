@@ -34,3 +34,6 @@ MonoBehaviour:
   shrinkBonusWeight: 20
   stickyBonusWeight: 20
   simpleBonusWeight: 20
+  gunBonusWeight: 20
+  cannonBonusWeight: 20
+  bombBonusWeight: 20

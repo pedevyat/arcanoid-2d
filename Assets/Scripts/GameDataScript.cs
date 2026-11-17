@@ -30,13 +30,17 @@ public class GameDataScript : ScriptableObject
     public int shrinkBonusWeight = 20;
     public int stickyBonusWeight = 20;
     public int simpleBonusWeight = 20;
+    public int gunBonusWeight = 20;
+    public int cannonBonusWeight = 20;
+    public int bombBonusWeight = 20;
 
     public BonusType GetRandomBonus()
     {
         int totalWeight = slowBonusWeight + fastBonusWeight + ballBonusWeight +
                           plus2BonusWeight + plus10BonusWeight + fireBonusWeight +
                           steelBonusWeight + normBonusWeight + expandBonusWeight +
-                          shrinkBonusWeight + stickyBonusWeight + simpleBonusWeight;
+                          shrinkBonusWeight + stickyBonusWeight + simpleBonusWeight +
+                          gunBonusWeight + cannonBonusWeight + bombBonusWeight;
 
         if (totalWeight <= 0)
             return BonusType.Ball;
@@ -65,7 +69,13 @@ public class GameDataScript : ScriptableObject
             return BonusType.Shrink;
         if ((value -= stickyBonusWeight) < 0)
             return BonusType.Sticky;
-        return BonusType.Simple;
+        if ((value -= simpleBonusWeight) < 0)
+            return BonusType.Simple;
+        if ((value -= gunBonusWeight) < 0)
+            return BonusType.Gun;
+        if ((value -= cannonBonusWeight) < 0)
+            return BonusType.Cannon;
+        return BonusType.Bomb;
     }
 
     public void Reset()

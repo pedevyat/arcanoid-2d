@@ -127,6 +127,9 @@ public class BallScript : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D other) 
     { 
+        if (other.CompareTag("Wall"))
+            HitEffects.BallWall(transform.position);
+
         Destroy(gameObject);
         if (GameAudioScript.Instance != null)
             GameAudioScript.Instance.PlayEffect(loseSound, 0.2f);
@@ -137,6 +140,15 @@ public class BallScript : MonoBehaviour
     {
         if (GameAudioScript.Instance != null)
             GameAudioScript.Instance.PlayEffect(hitSound, 0.2f); 
+
+        Vector3 hitPoint = transform.position;
+        if (collision.contactCount > 0)
+            hitPoint = collision.GetContact(0).point;
+
+        if (collision.gameObject.CompareTag("Wall"))
+            HitEffects.BallWall(hitPoint);
+        else if (collision.gameObject.CompareTag("Block"))
+            HitEffects.BallBlock(hitPoint);
 
         if (collision.gameObject.CompareTag("Player"))
         {

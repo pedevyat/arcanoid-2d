@@ -11,5 +11,8 @@ public enum BonusType
     Expand,
     Shrink,
     Sticky,
-    Simple
+    Simple,
+    Gun,
+    Cannon,
+    Bomb
 }

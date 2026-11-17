@@ -19,6 +19,7 @@ public class PlayerScript : MonoBehaviour
     public GameObject movingYellowPrefab;
     public GameObject movingBluePrefab;
     public GameObject ballPrefab;
+    public GameObject projectilePrefab;
     static Collider2D[] colliders = new Collider2D[50]; 
     static ContactFilter2D contactFilter = new ContactFilter2D();
     public GameDataScript gameData;
@@ -30,7 +31,17 @@ public class PlayerScript : MonoBehaviour
     SpriteRenderer spriteRenderer;
     Color normalColor = Color.white;
     static readonly Color StickyColor = new Color(0.6f, 1f, 0.6f, 1f);
+    static readonly Color GunColor = new Color(0.75f, 0.6f, 1f, 1f);
+    static readonly Color CannonColor = new Color(0.35f, 0.12f, 0.6f, 1f);
     const float maxSizeFactor = 1.5f * 1.5f;
+    enum WeaponMode { None, Gun, Cannon }
+    WeaponMode weaponMode;
+    GameObject gunVisual;
+    SpriteRenderer gunVisualRenderer;
+    static Sprite gunSprite;
+    public float fireCooldown = 0.22f;
+    float nextFireTime;
+    bool bombActive;
     int requiredPointsToBall { get { return 400 + (level - 1) * 20; } }
 
     // Start is called before the first frame update
@@ -141,6 +152,119 @@ public class PlayerScript : MonoBehaviour
             stuckBall = null;
     }
 
+    public void EquipGun(bool cannon)
+    {
+        weaponMode = cannon ? WeaponMode.Cannon : WeaponMode.Gun;
+
+        if (gunVisual == null)
+            CreateGunVisual();
+
+        if (gunVisual == null)
+            return;
+
+        gunVisual.SetActive(true);
+        gunVisualRenderer.color = cannon ? CannonColor : GunColor;
+        gunVisual.transform.localScale = cannon
+            ? new Vector3(0.16f, 0.4f, 1f)
+            : new Vector3(0.12f, 0.3f, 1f);
+    }
+
+    public void DisableGuns()
+    {
+        weaponMode = WeaponMode.None;
+
+        if (gunVisual != null)
+            gunVisual.SetActive(false);
+    }
+
+    public void ResetPaddleModes()
+    {
+        SetSticky(false);
+        DisableGuns();
+    }
+
+    public void DetonateBomb()
+    {
+        if (bombActive)
+            return;
+
+        bombActive = true;
+        StopAllCoroutines();
+
+        foreach (var ball in GameObject.FindGameObjectsWithTag("Ball"))
+            Destroy(ball);
+
+        if (spriteRenderer != null)
+            spriteRenderer.enabled = false;
+
+        var playerCollider = GetComponent<Collider2D>();
+        if (playerCollider != null)
+            playerCollider.enabled = false;
+
+        if (gunVisual != null)
+            gunVisual.SetActive(false);
+
+        HitEffects.Bomb(transform.position);
+        StartCoroutine(ReloadLevelAfterBomb());
+    }
+
+    IEnumerator ReloadLevelAfterBomb()
+    {
+        yield return new WaitForSeconds(0.45f);
+        GameSession.AutoStart = true;
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+
+    void CreateGunVisual()
+    {
+        if (gunVisual != null)
+            return;
+
+        gunVisual = new GameObject("Gun Visual");
+        gunVisual.transform.SetParent(transform, false);
+        gunVisual.transform.localPosition = new Vector3(0f, 0.55f, 0f);
+        gunVisual.transform.localScale = new Vector3(0.12f, 0.3f, 1f);
+
+        gunVisualRenderer = gunVisual.AddComponent<SpriteRenderer>();
+        gunVisualRenderer.sprite = GetGunSprite();
+        gunVisualRenderer.color = GunColor;
+        gunVisualRenderer.sortingOrder = 2;
+
+        gunVisual.SetActive(false);
+    }
+
+    static Sprite GetGunSprite()
+    {
+        if (gunSprite != null)
+            return gunSprite;
+
+        var texture = new Texture2D(1, 1);
+        texture.SetPixel(0, 0, Color.white);
+        texture.Apply();
+
+        gunSprite = Sprite.Create(texture, new Rect(0f, 0f, 1f, 1f), new Vector2(0.5f, 0.5f), 1f);
+        return gunSprite;
+    }
+
+    void FireProjectile()
+    {
+        if (projectilePrefab == null)
+            return;
+
+        bool cannon = weaponMode == WeaponMode.Cannon;
+        Vector3 spawnPosition = gunVisual != null && gunVisual.activeSelf
+            ? gunVisual.transform.position + Vector3.up * 0.35f
+            : transform.position + Vector3.up * 1.4f;
+
+        var projectileObject = Instantiate(projectilePrefab, spawnPosition, Quaternion.identity);
+        var projectile = projectileObject.GetComponent<ProjectileScript>();
+        if (projectile != null)
+            projectile.Initialize(cannon ? 4 : 1, cannon ? CannonColor : GunColor);
+
+        HitEffects.Play(spawnPosition, cannon ? CannonColor : GunColor, 5, 2f);
+        nextFireTime = Time.time + fireCooldown;
+    }
+
     public void CreateBonus(Vector3 position, GameObject bonusPrefab)
     {
         if (bonusPrefab == null)
@@ -185,6 +309,15 @@ public class PlayerScript : MonoBehaviour
                 break;
             case BonusType.Simple:
                 bonusBase = bonus.AddComponent<SimpleBonus>();
+                break;
+            case BonusType.Gun:
+                bonusBase = bonus.AddComponent<GunBonus>();
+                break;
+            case BonusType.Cannon:
+                bonusBase = bonus.AddComponent<CannonBonus>();
+                break;
+            case BonusType.Bomb:
+                bonusBase = bonus.AddComponent<BombBonus>();
                 break;
         }
 
@@ -394,6 +527,7 @@ public class PlayerScript : MonoBehaviour
         if (spriteRenderer != null)
             normalColor = spriteRenderer.color;
         initialScale = transform.localScale;
+        CreateGunVisual();
 
         if (!gameStarted) 
         { 
@@ -427,10 +561,16 @@ public class PlayerScript : MonoBehaviour
         if (Time.timeScale <= 0)
             return;
 
+        if (bombActive)
+            return;
+
         var mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         var pos = transform.position;
         pos.x = mousePos.x;
         transform.position = pos;
+
+        if (weaponMode != WeaponMode.None && Input.GetButtonDown("Fire1") && Time.time >= nextFireTime)
+            FireProjectile();
 
         if (Input.GetKeyDown(KeyCode.M) && GameAudioScript.Instance != null)
             GameAudioScript.Instance.ToggleMusic();
