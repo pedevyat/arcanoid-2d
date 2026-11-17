@@ -9,11 +9,13 @@ public class GameDataScript : ScriptableObject
     public int level = 1; 
     public int balls = 6; 
     public int points = 0;
+    public string playerName = "Игрок";
     public bool music = true;
     public bool sound = true;
     public float musicVolume = 0.2f;
     public float soundVolume = 1f;
     public int pointsToBall = 0;
+    public List<HighScoreEntry> highScores = new List<HighScoreEntry>();
 
     [Header("Bonus appearance weights")]
     public int slowBonusWeight = 20;
@@ -74,16 +76,56 @@ public class GameDataScript : ScriptableObject
         pointsToBall = 0;
     }
 
+    public bool AddHighScore(string name, int score)
+    {
+        if (string.IsNullOrEmpty(name))
+            name = "Игрок";
+
+        if (highScores == null)
+            highScores = new List<HighScoreEntry>();
+
+        var entry = new HighScoreEntry { playerName = name, points = score };
+        highScores.Add(entry);
+        highScores.Sort((first, second) => second.points.CompareTo(first.points));
+
+        int index = highScores.IndexOf(entry);
+        bool qualified = index >= 0 && index < 5;
+
+        if (highScores.Count > 5)
+            highScores.RemoveRange(5, highScores.Count - 5);
+
+        Save();
+        return qualified;
+    }
+
     public void Save() 
     { 
+        if (highScores == null)
+            highScores = new List<HighScoreEntry>();
+
         PlayerPrefs.SetInt("level", level); 
         PlayerPrefs.SetInt("balls", balls);
         PlayerPrefs.SetInt("points", points);
+        PlayerPrefs.SetString("playerName", playerName);
         PlayerPrefs.SetInt("pointsToBall", pointsToBall); 
         PlayerPrefs.SetInt("music", music ? 1 : 0); 
         PlayerPrefs.SetInt("sound", sound ? 1 : 0); 
         PlayerPrefs.SetFloat("musicVolume", musicVolume);
         PlayerPrefs.SetFloat("soundVolume", soundVolume);
+
+        for (int i = 0; i < 5; i++)
+        {
+            if (i < highScores.Count)
+            {
+                PlayerPrefs.SetString("highScoreName" + i, highScores[i].playerName);
+                PlayerPrefs.SetInt("highScorePoints" + i, highScores[i].points);
+            }
+            else
+            {
+                PlayerPrefs.SetString("highScoreName" + i, "");
+                PlayerPrefs.SetInt("highScorePoints" + i, 0);
+            }
+        }
     }
 
     public void Load() 
@@ -91,10 +133,29 @@ public class GameDataScript : ScriptableObject
         level = PlayerPrefs.GetInt("level", 1); 
         balls = PlayerPrefs.GetInt("balls", 6); 
         points = PlayerPrefs.GetInt("points", 0); 
+        playerName = PlayerPrefs.GetString("playerName", "Игрок");
         pointsToBall = PlayerPrefs.GetInt("pointsToBall", 0);
         music = PlayerPrefs.GetInt("music", 1) == 1; 
         sound = PlayerPrefs.GetInt("sound", 1) == 1; 
         musicVolume = PlayerPrefs.GetFloat("musicVolume", 0.2f);
         soundVolume = PlayerPrefs.GetFloat("soundVolume", 1f);
+
+        if (highScores == null)
+            highScores = new List<HighScoreEntry>();
+        highScores.Clear();
+        for (int i = 0; i < 5; i++)        {
+            string name = PlayerPrefs.GetString("highScoreName" + i, "");
+            int score = PlayerPrefs.GetInt("highScorePoints" + i, 0);
+            if (!string.IsNullOrEmpty(name))
+                highScores.Add(new HighScoreEntry { playerName = name, points = score });
+        }
+        highScores.Sort((first, second) => second.points.CompareTo(first.points));
     }
+}
+
+[System.Serializable]
+public class HighScoreEntry
+{
+    public string playerName;
+    public int points;
 }

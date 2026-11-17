@@ -204,9 +204,10 @@ public class PlayerScript : MonoBehaviour
                 CreateBalls();
             else 
             { 
+                int finalScore = gameData.points;
                 gameData.Reset(); 
                 if (GameMenuScript.Instance != null)
-                    GameMenuScript.Instance.ShowGameOver();
+                    GameMenuScript.Instance.ShowGameOver(finalScore);
                 else
                     SceneManager.LoadScene("UnityArcanoid2D"); 
             }

@@ -13,7 +13,11 @@ public class GameMenuScript : MonoBehaviour
     GameObject pausePanel;
     GameObject startExitButton;
     GameObject gameOverLabel;
+    GameObject gameOverMessage;
     Text startTitleText;
+    InputField nameInput;
+    Text highScoresText;
+    int lastScore;
 
     Toggle startMusicToggle;
     Toggle startSoundToggle;
@@ -106,25 +110,45 @@ public class GameMenuScript : MonoBehaviour
     public void RefreshSettings()
     {
         SyncControls();
+        RefreshHighScores();
+
+        if (gameData != null && nameInput != null)
+            nameInput.text = gameData.playerName;
     }
 
-    public void ShowStartScreen(bool fromGameOver)
+    public void ShowStartScreen(bool fromGameOver, bool highScore = false)
     {
         gameOver = fromGameOver;
         startPanel.SetActive(true);
         pausePanel.SetActive(false);
         startExitButton.SetActive(fromGameOver);
         gameOverLabel.SetActive(fromGameOver);
+        gameOverMessage.SetActive(fromGameOver && highScore);
+
+        if (gameData != null)
+            nameInput.text = gameData.playerName;
+
+        RefreshHighScores();
+
+        if (fromGameOver && highScore)
+            gameOverMessage.GetComponent<Text>().text = "Ваш результат " + lastScore + " вошёл в пятёрку лучших!";
+
         Time.timeScale = 0f;
         Cursor.visible = true;
         SyncControls();
     }
 
-    public void ShowGameOver()
+    public void ShowGameOver(int finalScore)
     {
+        lastScore = finalScore;
+
+        bool qualified = false;
+        if (gameData != null)
+            qualified = gameData.AddHighScore(gameData.playerName, finalScore);
+
         GameSession.AutoStart = false;
         GameSession.GameOver = true;
-        ShowStartScreen(true);
+        ShowStartScreen(true, qualified);
     }
 
     void HideMenus()
@@ -138,6 +162,8 @@ public class GameMenuScript : MonoBehaviour
 
     void PlayGame()
     {
+        SavePlayerName();
+
         GameSession.AutoStart = true;
         GameSession.GameOver = false;
         Time.timeScale = 1f;
@@ -251,6 +277,43 @@ public class GameMenuScript : MonoBehaviour
         pauseSoundSlider.onValueChanged.AddListener(OnSoundVolumeChanged);
     }
 
+    void SavePlayerName()
+    {
+        if (gameData == null || nameInput == null)
+            return;
+
+        string playerName = nameInput.text.Trim();
+        if (string.IsNullOrEmpty(playerName))
+            playerName = "Игрок";
+
+        gameData.playerName = playerName;
+        nameInput.text = playerName;
+    }
+
+    void RefreshHighScores()
+    {
+        if (highScoresText == null)
+            return;
+
+        if (gameData == null || gameData.highScores == null || gameData.highScores.Count == 0)
+        {
+            highScoresText.text = "Пока нет результатов";
+            return;
+        }
+
+        string result = "";
+        int count = Mathf.Min(5, gameData.highScores.Count);
+        for (int i = 0; i < count; i++)
+        {
+            var entry = gameData.highScores[i];
+            result += (i + 1) + ". " + entry.playerName + " — " + entry.points;
+            if (i < count - 1)
+                result += "\n";
+        }
+
+        highScoresText.text = result;
+    }
+
     void BuildUI()
     {
         var canvasObject = new GameObject("Menu Canvas", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
@@ -269,20 +332,30 @@ public class GameMenuScript : MonoBehaviour
         var startImage = CreatePanel(canvas.transform, "Start Panel", new Color(0.03f, 0.05f, 0.12f, 0.97f));
         startPanel = startImage.gameObject;
 
-        startTitleText = CreateText(startPanel.transform, "Title", "ARKANOID", 80, TextAnchor.MiddleCenter, new Vector2(0f, 320f), new Vector2(1000f, 120f));
-        gameOverLabel = CreateText(startPanel.transform, "Game Over Label", "ИГРА ОКОНЧЕНА", 42, TextAnchor.MiddleCenter, new Vector2(0f, 220f), new Vector2(800f, 80f)).gameObject;
+        startTitleText = CreateText(startPanel.transform, "Title", "ARKANOID", 80, TextAnchor.MiddleCenter, new Vector2(0f, 450f), new Vector2(1000f, 120f));
+        gameOverLabel = CreateText(startPanel.transform, "Game Over Label", "ИГРА ОКОНЧЕНА", 42, TextAnchor.MiddleCenter, new Vector2(0f, 345f), new Vector2(800f, 70f)).gameObject;
         gameOverLabel.SetActive(false);
 
-        startMusicToggle = CreateToggle(startPanel.transform, "Music Toggle", new Vector2(-410f, 60f));
-        CreateText(startPanel.transform, "Music Label", "Фоновая музыка", 32, TextAnchor.MiddleLeft, new Vector2(-220f, 60f), new Vector2(300f, 50f));
-        startMusicSlider = CreateSlider(startPanel.transform, "Music Slider", new Vector2(230f, 60f), new Vector2(440f, 28f));
+        gameOverMessage = CreateText(startPanel.transform, "Game Over Message", "Ваш результат вошёл в пятёрку лучших!", 28, TextAnchor.MiddleCenter, new Vector2(0f, 275f), new Vector2(1100f, 50f)).gameObject;
+        gameOverMessage.SetActive(false);
 
-        startSoundToggle = CreateToggle(startPanel.transform, "Sound Toggle", new Vector2(-410f, -40f));
-        CreateText(startPanel.transform, "Sound Label", "Звуковые эффекты", 32, TextAnchor.MiddleLeft, new Vector2(-220f, -40f), new Vector2(300f, 50f));
-        startSoundSlider = CreateSlider(startPanel.transform, "Sound Slider", new Vector2(230f, -40f), new Vector2(440f, 28f));
+        CreateText(startPanel.transform, "Name Label", "Имя игрока", 32, TextAnchor.MiddleRight, new Vector2(-330f, 210f), new Vector2(240f, 50f));
+        nameInput = CreateInputField(startPanel.transform, "Name Input", new Vector2(160f, 210f), new Vector2(520f, 52f));
 
-        CreateButton(startPanel.transform, "Play Button", "Играть", new Vector2(0f, -180f), new Vector2(320f, 72f), new Color(0.15f, 0.45f, 0.85f, 1f), PlayGame);
-        startExitButton = CreateButton(startPanel.transform, "Exit Button", "Выход", new Vector2(0f, -280f), new Vector2(320f, 72f), new Color(0.55f, 0.15f, 0.15f, 1f), QuitGame).gameObject;
+        startMusicToggle = CreateToggle(startPanel.transform, "Music Toggle", new Vector2(-410f, 130f));
+        CreateText(startPanel.transform, "Music Label", "Фоновая музыка", 32, TextAnchor.MiddleLeft, new Vector2(-220f, 130f), new Vector2(300f, 50f));
+        startMusicSlider = CreateSlider(startPanel.transform, "Music Slider", new Vector2(230f, 130f), new Vector2(440f, 28f));
+
+        startSoundToggle = CreateToggle(startPanel.transform, "Sound Toggle", new Vector2(-410f, 60f));
+        CreateText(startPanel.transform, "Sound Label", "Звуковые эффекты", 32, TextAnchor.MiddleLeft, new Vector2(-220f, 60f), new Vector2(300f, 50f));
+        startSoundSlider = CreateSlider(startPanel.transform, "Sound Slider", new Vector2(230f, 60f), new Vector2(440f, 28f));
+
+        CreateText(startPanel.transform, "High Scores Title", "Лучшие результаты", 32, TextAnchor.MiddleCenter, new Vector2(0f, 10f), new Vector2(800f, 40f));
+        highScoresText = CreateText(startPanel.transform, "High Scores", "Пока нет результатов", 28, TextAnchor.MiddleCenter, new Vector2(0f, -110f), new Vector2(900f, 210f));
+        highScoresText.verticalOverflow = VerticalWrapMode.Overflow;
+
+        CreateButton(startPanel.transform, "Play Button", "Играть", new Vector2(0f, -280f), new Vector2(320f, 72f), new Color(0.15f, 0.45f, 0.85f, 1f), PlayGame);
+        startExitButton = CreateButton(startPanel.transform, "Exit Button", "Выход", new Vector2(0f, -370f), new Vector2(320f, 72f), new Color(0.55f, 0.15f, 0.15f, 1f), QuitGame).gameObject;
         startExitButton.SetActive(false);
 
         var pauseImage = CreatePanel(canvas.transform, "Pause Panel", new Color(0.02f, 0.03f, 0.08f, 0.9f));
@@ -304,7 +377,7 @@ public class GameMenuScript : MonoBehaviour
 
         pausePanel.SetActive(false);
         SetupListeners();
-        SyncControls();
+        RefreshSettings();
     }
 
     Image CreatePanel(Transform parent, string name, Color color)
@@ -420,6 +493,53 @@ public class GameMenuScript : MonoBehaviour
         slider.value = 0.5f;
 
         return slider;
+    }
+
+    InputField CreateInputField(Transform parent, string name, Vector2 position, Vector2 size)
+    {
+        var go = new GameObject(name, typeof(RectTransform), typeof(Image), typeof(InputField));
+        go.transform.SetParent(parent, false);
+        Place(go.GetComponent<RectTransform>(), position, size);
+
+        var background = go.GetComponent<Image>();
+        background.color = new Color(0.12f, 0.14f, 0.2f, 1f);
+
+        var input = go.GetComponent<InputField>();
+        input.targetGraphic = background;
+        input.characterLimit = 16;
+        input.lineType = InputField.LineType.SingleLine;
+
+        var textObject = new GameObject("Text", typeof(RectTransform), typeof(Text));
+        textObject.transform.SetParent(go.transform, false);
+        var text = textObject.GetComponent<Text>();
+        text.font = GetFont();
+        text.fontSize = 30;
+        text.color = Color.white;
+        text.alignment = TextAnchor.MiddleLeft;
+        text.supportRichText = false;
+        text.raycastTarget = false;
+        Stretch(text.rectTransform);
+        text.rectTransform.offsetMin = new Vector2(12f, 0f);
+        text.rectTransform.offsetMax = new Vector2(-12f, 0f);
+
+        var placeholderObject = new GameObject("Placeholder", typeof(RectTransform), typeof(Text));
+        placeholderObject.transform.SetParent(go.transform, false);
+        var placeholder = placeholderObject.GetComponent<Text>();
+        placeholder.font = GetFont();
+        placeholder.fontSize = 30;
+        placeholder.color = new Color(1f, 1f, 1f, 0.35f);
+        placeholder.alignment = TextAnchor.MiddleLeft;
+        placeholder.text = "Введите имя";
+        placeholder.raycastTarget = false;
+        Stretch(placeholder.rectTransform);
+        placeholder.rectTransform.offsetMin = new Vector2(12f, 0f);
+        placeholder.rectTransform.offsetMax = new Vector2(-12f, 0f);
+
+        input.textComponent = text;
+        input.placeholder = placeholder;
+        input.text = gameData != null ? gameData.playerName : "Игрок";
+
+        return input;
     }
 
     Button CreateButton(Transform parent, string name, string label, Vector2 position, Vector2 size, Color color, UnityAction action)
