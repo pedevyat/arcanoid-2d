@@ -1,5 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Xml;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -272,18 +274,118 @@ public class PlayerScript : MonoBehaviour
     }
 
 
+    bool TryLoadDesignedLevel()
+    {
+        var levelAsset = Resources.Load<TextAsset>("Levels/level_" + level.ToString("d2"));
+        if (levelAsset == null)
+            return false;
+
+        var document = new XmlDocument();
+        try
+        {
+            document.LoadXml(levelAsset.text);
+        }
+        catch
+        {
+            return false;
+        }
+
+        var levelElement = document.DocumentElement;
+        if (levelElement == null)
+            return false;
+
+        var blockNodes = levelElement.SelectNodes("Block");
+        if (blockNodes == null || blockNodes.Count == 0)
+            return false;
+
+        var levelRoot = new GameObject("Designed Level " + level).transform;
+        bool createdAny = false;
+
+        foreach (XmlNode blockNode in blockNodes)
+        {
+            if (blockNode.Attributes == null)
+                continue;
+
+            var typeAttribute = blockNode.Attributes["type"];
+            var xAttribute = blockNode.Attributes["x"];
+            var yAttribute = blockNode.Attributes["y"];
+            if (typeAttribute == null || xAttribute == null || yAttribute == null)
+                continue;
+
+            var prefab = GetBlockPrefab(typeAttribute.Value);
+            if (prefab == null)
+                continue;
+
+            float x = ParseFloat(xAttribute.Value);
+            float y = ParseFloat(yAttribute.Value);
+            float z = 0f;
+
+            var zAttribute = blockNode.Attributes["z"];
+            if (zAttribute != null)
+                z = ParseFloat(zAttribute.Value);
+
+            Instantiate(prefab, new Vector3(x, y, z), Quaternion.identity, levelRoot);
+            createdAny = true;
+        }
+
+        if (!createdAny)
+        {
+            Destroy(levelRoot.gameObject);
+            return false;
+        }
+
+        return true;
+    }
+
+    GameObject GetBlockPrefab(string type)
+    {
+        switch (type)
+        {
+            case "Blue":
+                return bluePrefab;
+            case "Red":
+                return redPrefab;
+            case "Green":
+                return greenPrefab;
+            case "Yellow":
+                return yellowPrefab;
+            case "MovingYellow":
+                return movingYellowPrefab;
+            case "MovingBlue":
+                return movingBluePrefab;
+            case "RedXO":
+                return xoRedPrefab;
+        }
+
+        return null;
+    }
+
+    float ParseFloat(string value)
+    {
+        float result;
+        if (float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out result))
+            return result;
+
+        return 0f;
+    }
+
     void StartLevel() 
     {
         SetBackground();
         var yMax = Camera.main.orthographicSize * 0.8f;
         var xMax = Camera.main.orthographicSize * Camera.main.aspect * 0.85f; 
-        CreateBlocks(bluePrefab, xMax, yMax, level, 8);
-        CreateBlocks(movingBluePrefab, xMax, yMax, 1 + level / 5, 3);
-        CreateBlocks(redPrefab, xMax, yMax, 1 + level, 10);
-        CreateBlocks(xoRedPrefab, xMax, yMax, Mathf.Min(2 + level / 3, 4), 4);
-        CreateBlocks(greenPrefab, xMax, yMax, 1 + level, 12);
-        CreateBlocks(yellowPrefab, xMax, yMax, 2 + level, 15); 
-        CreateBlocks(movingYellowPrefab, xMax, yMax, 1 + level / 5, 5);
+
+        if (!TryLoadDesignedLevel())
+        {
+            CreateBlocks(bluePrefab, xMax, yMax, level, 8);
+            CreateBlocks(movingBluePrefab, xMax, yMax, 1 + level / 5, 3);
+            CreateBlocks(redPrefab, xMax, yMax, 1 + level, 10);
+            CreateBlocks(xoRedPrefab, xMax, yMax, Mathf.Min(2 + level / 3, 4), 4);
+            CreateBlocks(greenPrefab, xMax, yMax, 1 + level, 12);
+            CreateBlocks(yellowPrefab, xMax, yMax, 2 + level, 15); 
+            CreateBlocks(movingYellowPrefab, xMax, yMax, 1 + level / 5, 5);
+        }
+
         CreateBalls(); 
     }
     void Start()

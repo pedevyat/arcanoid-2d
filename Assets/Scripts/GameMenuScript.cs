@@ -332,7 +332,7 @@ public class GameMenuScript : MonoBehaviour
         var startImage = CreatePanel(canvas.transform, "Start Panel", new Color(0.03f, 0.05f, 0.12f, 0.97f));
         startPanel = startImage.gameObject;
 
-        startTitleText = CreateText(startPanel.transform, "Title", "ARKANOID", 80, TextAnchor.MiddleCenter, new Vector2(0f, 450f), new Vector2(1000f, 120f));
+        startTitleText = CreateText(startPanel.transform, "Title", "UnityArcanoid2D", 80, TextAnchor.MiddleCenter, new Vector2(0f, 450f), new Vector2(1000f, 120f));
         gameOverLabel = CreateText(startPanel.transform, "Game Over Label", "ИГРА ОКОНЧЕНА", 42, TextAnchor.MiddleCenter, new Vector2(0f, 345f), new Vector2(800f, 70f)).gameObject;
         gameOverLabel.SetActive(false);
 

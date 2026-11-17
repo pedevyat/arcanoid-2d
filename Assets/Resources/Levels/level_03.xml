@@ -1,0 +1,30 @@
+<Level number="3">
+  <Block type="Blue" x="-5" y="0" z="0" />
+  <Block type="Blue" x="-4" y="0" z="0" />
+  <Block type="Blue" x="-3" y="0" z="0" />
+  <Block type="Blue" x="-2" y="0" z="0" />
+  <Block type="Blue" x="-1" y="0" z="0" />
+  <Block type="Blue" x="1" y="0" z="0" />
+  <Block type="Blue" x="2" y="0" z="0" />
+  <Block type="Blue" x="3" y="0" z="0" />
+  <Block type="Blue" x="4" y="0" z="0" />
+  <Block type="Blue" x="5" y="0" z="0" />
+  <Block type="Blue" x="1" y="3" z="0" />
+  <Block type="Blue" x="2" y="3" z="0" />
+  <Block type="Blue" x="3" y="3" z="0" />
+  <Block type="Blue" x="4" y="3" z="0" />
+  <Block type="Blue" x="5" y="3" z="0" />
+  <Block type="Blue" x="-5" y="3" z="0" />
+  <Block type="Blue" x="-4" y="3" z="0" />
+  <Block type="Blue" x="-3" y="3" z="0" />
+  <Block type="Blue" x="-2" y="3" z="0" />
+  <Block type="Blue" x="-1" y="3" z="0" />
+  <Block type="MovingYellow" x="-5" y="1.5" z="0" />
+  <Block type="MovingYellow" x="-3" y="1.5" z="0" />
+  <Block type="MovingYellow" x="-1" y="1.5" z="0" />
+  <Block type="Green" x="1" y="1" z="0" />
+  <Block type="Green" x="2" y="1" z="0" />
+  <Block type="Green" x="3" y="1" z="0" />
+  <Block type="Green" x="4" y="1" z="0" />
+  <Block type="Green" x="5" y="1" z="0" />
+</Level>
