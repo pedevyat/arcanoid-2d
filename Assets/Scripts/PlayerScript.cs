@@ -21,7 +21,7 @@ public class PlayerScript : MonoBehaviour
     static ContactFilter2D contactFilter = new ContactFilter2D();
     public GameDataScript gameData;
     static bool gameStarted = false;
-    AudioSource audioSrc; public AudioClip pointSound;
+    public AudioClip pointSound;
     public bool sticky;
     BallScript stuckBall;
     Vector3 initialScale;
@@ -205,7 +205,10 @@ public class PlayerScript : MonoBehaviour
             else 
             { 
                 gameData.Reset(); 
-                SceneManager.LoadScene("UnityArcanoid2D"); 
+                if (GameMenuScript.Instance != null)
+                    GameMenuScript.Instance.ShowGameOver();
+                else
+                    SceneManager.LoadScene("UnityArcanoid2D"); 
             }
     }
 
@@ -242,14 +245,15 @@ public class PlayerScript : MonoBehaviour
         for (int i = 0; i < 10; i++) 
         { 
             yield return new WaitForSeconds(0.2f); 
-            audioSrc.PlayOneShot(pointSound, 5); 
-        }
+            if (GameAudioScript.Instance != null)
+                GameAudioScript.Instance.PlayEffect(pointSound); 
+        } 
     }
     public void BlockDestroyed(int points) 
     {
         gameData.points += points;
-        if (gameData.sound)
-            audioSrc.PlayOneShot(pointSound, 5);
+        if (gameData.sound && GameAudioScript.Instance != null)
+            GameAudioScript.Instance.PlayEffect(pointSound);
         gameData.pointsToBall += points; 
         if (gameData.pointsToBall >= requiredPointsToBall) 
         {
@@ -259,13 +263,6 @@ public class PlayerScript : MonoBehaviour
                 StartCoroutine(BlockDestroyedCoroutine2());
         }
         StartCoroutine(BlockDestroyedCoroutine()); 
-    }
-    
-    void SetMusic() 
-    { 
-        if (gameData.music) 
-            audioSrc.Play();
-        else audioSrc.Stop();
     }
 
     void OnApplicationQuit()
@@ -290,12 +287,11 @@ public class PlayerScript : MonoBehaviour
     }
     void Start()
     {
-        audioSrc = Camera.main.GetComponent<AudioSource>();
         spriteRenderer = GetComponent<SpriteRenderer>();
         if (spriteRenderer != null)
             normalColor = spriteRenderer.color;
         initialScale = transform.localScale;
-        Cursor.visible = false;
+
         if (!gameStarted) 
         { 
             gameStarted = true; 
@@ -303,37 +299,46 @@ public class PlayerScript : MonoBehaviour
                 gameData.Load(); 
         }
         level = gameData.level;
-        SetMusic();
-        StartLevel();
 
+        if (GameAudioScript.Instance != null)
+            GameAudioScript.Instance.ApplySettings();
+        if (GameMenuScript.Instance != null)
+            GameMenuScript.Instance.RefreshSettings();
+
+        if (GameSession.AutoStart)
+        {
+            Time.timeScale = 1f;
+            Cursor.visible = false;
+            StartLevel();
+        }
+        else
+        {
+            Time.timeScale = 0f;
+            Cursor.visible = true;
+        }
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (Time.timeScale > 0)
-        {
-            var mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            var pos = transform.position;
-            pos.x = mousePos.x;
-            transform.position = pos;
-        }
-        if (Input.GetKeyDown(KeyCode.M))
-        {
-            gameData.music = !gameData.music; 
-            SetMusic(); 
-        }
-        if (Input.GetKeyDown(KeyCode.S))
-            gameData.sound = !gameData.sound;
-        if (Input.GetButtonDown("Pause"))
-            if (Time.timeScale > 0)
-                Time.timeScale = 0; 
-            else 
-                Time.timeScale = 1;
+        if (Time.timeScale <= 0)
+            return;
+
+        var mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        var pos = transform.position;
+        pos.x = mousePos.x;
+        transform.position = pos;
+
+        if (Input.GetKeyDown(KeyCode.M) && GameAudioScript.Instance != null)
+            GameAudioScript.Instance.ToggleMusic();
+
+        if (Input.GetKeyDown(KeyCode.S) && GameAudioScript.Instance != null)
+            GameAudioScript.Instance.ToggleSound();
 
         if (Input.GetKeyDown(KeyCode.N)) 
         { 
-            gameData.Reset(); 
+            gameData.Reset();
+            GameSession.AutoStart = true;
             SceneManager.LoadScene("UnityArcanoid2D"); 
         }
         if (Input.GetKeyDown(KeyCode.Escape))
@@ -349,16 +354,19 @@ public class PlayerScript : MonoBehaviour
 
     void OnGUI() 
     { 
+        if (Time.timeScale <= 0)
+            return;
+
         GUI.Label(new Rect(5, 4, Screen.width - 10, 100), string.Format(
             "<color=yellow><size=30>Level <b>{0}</b>  Balls <b>{1}</b>" + "  Score <b>{2}</b></size></color>",
             gameData.level, gameData.balls, gameData.points));
         GUIStyle style = new GUIStyle(); 
         style.alignment = TextAnchor.UpperRight; GUI.Label(new Rect(5, 14, Screen.width - 10, 100),
             string.Format(
-                "<color=yellow><size=20><color=white>Space</color>-pause {0}" +
+                "<color=yellow><size=20><color=white>Space</color>-pause" +
                 " <color=white>N</color>-new" + " <color=white>J</color>-jump" + 
-                " <color=white>M</color>-music {1}" + " <color=white>S</color>-sound {2}" +
-                " <color=white>Esc</color>-exit</size></color>", OnOff(Time.timeScale > 0), 
+                " <color=white>M</color>-music {0}" + " <color=white>S</color>-sound {1}" +
+                " <color=white>Esc</color>-exit</size></color>",
                 OnOff(!gameData.music), OnOff(!gameData.sound)), style);
     }
 

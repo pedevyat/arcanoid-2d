@@ -16,6 +16,11 @@ MonoBehaviour:
   level: 1
   balls: 6
   points: 0
+  music: 1
+  sound: 1
+  musicVolume: 0.2
+  soundVolume: 1
+  pointsToBall: 0
   slowBonusWeight: 20
   fastBonusWeight: 20
   ballBonusWeight: 20
