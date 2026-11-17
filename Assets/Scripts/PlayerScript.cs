@@ -11,6 +11,7 @@ public class PlayerScript : MonoBehaviour
     public float ballVelocityMult = 0.02f;
     public GameObject bluePrefab; 
     public GameObject redPrefab; 
+    public GameObject xoRedPrefab;
     public GameObject greenPrefab; 
     public GameObject yellowPrefab;
     public GameObject movingYellowPrefab;
@@ -281,6 +282,7 @@ public class PlayerScript : MonoBehaviour
         CreateBlocks(bluePrefab, xMax, yMax, level, 8);
         CreateBlocks(movingBluePrefab, xMax, yMax, 1 + level / 5, 3);
         CreateBlocks(redPrefab, xMax, yMax, 1 + level, 10);
+        CreateBlocks(xoRedPrefab, xMax, yMax, Mathf.Min(2 + level / 3, 4), 4);
         CreateBlocks(greenPrefab, xMax, yMax, 1 + level, 12);
         CreateBlocks(yellowPrefab, xMax, yMax, 2 + level, 15); 
         CreateBlocks(movingYellowPrefab, xMax, yMax, 1 + level / 5, 5);
