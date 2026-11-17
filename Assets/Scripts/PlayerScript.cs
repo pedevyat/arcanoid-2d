@@ -19,6 +19,13 @@ public class PlayerScript : MonoBehaviour
     public GameDataScript gameData;
     static bool gameStarted = false;
     AudioSource audioSrc; public AudioClip pointSound;
+    public bool sticky;
+    BallScript stuckBall;
+    Vector3 initialScale;
+    SpriteRenderer spriteRenderer;
+    Color normalColor = Color.white;
+    static readonly Color StickyColor = new Color(0.6f, 1f, 0.6f, 1f);
+    const float maxSizeFactor = 1.5f * 1.5f;
     int requiredPointsToBall { get { return 400 + (level - 1) * 20; } }
 
     // Start is called before the first frame update
@@ -83,6 +90,52 @@ public class PlayerScript : MonoBehaviour
         }
     }
 
+    public void Expand()
+    {
+        var scale = transform.localScale;
+        scale.x = Mathf.Min(scale.x * 1.5f, initialScale.x * maxSizeFactor);
+        scale.y = Mathf.Min(scale.y * 1.5f, initialScale.y * maxSizeFactor);
+        transform.localScale = scale;
+    }
+
+    public void Shrink()
+    {
+        var scale = transform.localScale;
+        scale.x = Mathf.Max(scale.x / 1.5f, initialScale.x / maxSizeFactor);
+        scale.y = Mathf.Max(scale.y / 1.5f, initialScale.y / maxSizeFactor);
+        transform.localScale = scale;
+    }
+
+    public void SetSticky(bool value)
+    {
+        sticky = value;
+
+        if (spriteRenderer != null)
+            spriteRenderer.color = sticky ? StickyColor : normalColor;
+
+        if (!sticky && stuckBall != null)
+        {
+            stuckBall.ReleaseFromStick();
+            stuckBall = null;
+        }
+    }
+
+    public bool TryStickBall(BallScript ball)
+    {
+        if (!sticky || stuckBall != null)
+            return false;
+
+        stuckBall = ball;
+        ball.StickToPlayer();
+        return true;
+    }
+
+    public void BallLaunched(BallScript ball)
+    {
+        if (stuckBall == ball)
+            stuckBall = null;
+    }
+
     public void CreateBonus(Vector3 position, GameObject bonusPrefab)
     {
         if (bonusPrefab == null)
@@ -115,6 +168,18 @@ public class PlayerScript : MonoBehaviour
                 break;
             case BonusType.Norm:
                 bonusBase = bonus.AddComponent<NormBonus>();
+                break;
+            case BonusType.Expand:
+                bonusBase = bonus.AddComponent<ExpandBonus>();
+                break;
+            case BonusType.Shrink:
+                bonusBase = bonus.AddComponent<ShrinkBonus>();
+                break;
+            case BonusType.Sticky:
+                bonusBase = bonus.AddComponent<StickyBonus>();
+                break;
+            case BonusType.Simple:
+                bonusBase = bonus.AddComponent<SimpleBonus>();
                 break;
         }
 
@@ -209,6 +274,10 @@ public class PlayerScript : MonoBehaviour
     void Start()
     {
         audioSrc = Camera.main.GetComponent<AudioSource>();
+        spriteRenderer = GetComponent<SpriteRenderer>();
+        if (spriteRenderer != null)
+            normalColor = spriteRenderer.color;
+        initialScale = transform.localScale;
         Cursor.visible = false;
         if (!gameStarted) 
         { 

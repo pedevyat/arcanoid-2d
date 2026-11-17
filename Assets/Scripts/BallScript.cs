@@ -9,6 +9,7 @@ public class BallScript : MonoBehaviour
     Rigidbody2D rb;
     GameObject playerObj; 
     float deltaX;
+    bool isStuck;
     AudioSource audioSrc; 
     public AudioClip hitSound; 
     public AudioClip loseSound;
@@ -18,7 +19,8 @@ public class BallScript : MonoBehaviour
     {
         rb = GetComponent<Rigidbody2D>();
         playerObj = GameObject.FindGameObjectWithTag("Player"); 
-        deltaX = transform.position.x;
+        if (!isStuck)
+            deltaX = transform.position.x;
         audioSrc = Camera.main.GetComponent<AudioSource>();
 
     }
@@ -27,6 +29,19 @@ public class BallScript : MonoBehaviour
     void Update()
     {
         if (rb.isKinematic) 
+        {
+            if (isStuck && playerObj != null)
+            {
+                var playerCollider = playerObj.GetComponent<Collider2D>();
+                var ballCollider = GetComponent<Collider2D>();
+                if (playerCollider != null && ballCollider != null)
+                {
+                    var stuckPosition = transform.position;
+                    stuckPosition.y = playerCollider.bounds.max.y + ballCollider.bounds.extents.y;
+                    transform.position = stuckPosition;
+                }
+            }
+
             if (Input.GetButtonDown("Fire1")) 
                 Launch();
             else 
@@ -35,6 +50,7 @@ public class BallScript : MonoBehaviour
                 pos.x = playerObj.transform.position.x + deltaX; 
                 transform.position = pos; 
             }
+        }
         if (!rb.isKinematic && Input.GetKeyDown(KeyCode.J)) 
         { 
             var v = rb.velocity; 
@@ -48,9 +64,50 @@ public class BallScript : MonoBehaviour
 
     public void Launch()
     {
+        if (isStuck)
+        {
+            isStuck = false;
+            transform.position += Vector3.up * 0.1f;
+            if (playerObj != null)
+            {
+                var playerScript = playerObj.GetComponent<PlayerScript>();
+                if (playerScript != null)
+                    playerScript.BallLaunched(this);
+            }
+        }
+
         var rigidbody2D = GetComponent<Rigidbody2D>();
         rigidbody2D.isKinematic = false;
         rigidbody2D.AddForce(ballInitialForce);
+    }
+
+    public void StickToPlayer()
+    {
+        if (playerObj == null)
+            playerObj = GameObject.FindGameObjectWithTag("Player");
+
+        var rigidbody2D = GetComponent<Rigidbody2D>();
+        rigidbody2D.velocity = Vector2.zero;
+        rigidbody2D.angularVelocity = 0f;
+        rigidbody2D.isKinematic = true;
+
+        var ballCollider = GetComponent<Collider2D>();
+        var playerCollider = playerObj.GetComponent<Collider2D>();
+        if (ballCollider != null && playerCollider != null)
+        {
+            var position = transform.position;
+            position.y = playerCollider.bounds.max.y + ballCollider.bounds.extents.y;
+            transform.position = position;
+        }
+
+        deltaX = transform.position.x - playerObj.transform.position.x;
+        isStuck = true;
+    }
+
+    public void ReleaseFromStick()
+    {
+        if (isStuck)
+            Launch();
     }
 
     public void ChangeSpeed(float multiplier)
@@ -79,6 +136,14 @@ public class BallScript : MonoBehaviour
 
     void OnCollisionEnter2D(Collision2D collision) 
     {
-        audioSrc.PlayOneShot(hitSound); 
+        if (audioSrc != null)
+            audioSrc.PlayOneShot(hitSound); 
+
+        if (collision.gameObject.CompareTag("Player"))
+        {
+            var playerScript = collision.gameObject.GetComponent<PlayerScript>();
+            if (playerScript != null)
+                playerScript.TryStickBall(this);
+        }
     }
 }

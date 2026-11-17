@@ -24,3 +24,7 @@ MonoBehaviour:
   fireBonusWeight: 20
   steelBonusWeight: 20
   normBonusWeight: 20
+  expandBonusWeight: 20
+  shrinkBonusWeight: 20
+  stickyBonusWeight: 20
+  simpleBonusWeight: 20

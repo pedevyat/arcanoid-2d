@@ -7,5 +7,9 @@ public enum BonusType
     Plus10,
     Fire,
     Steel,
-    Norm
+    Norm,
+    Expand,
+    Shrink,
+    Sticky,
+    Simple
 }
