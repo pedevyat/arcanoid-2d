@@ -310,3 +310,4 @@ MonoBehaviour:
   textObject: {fileID: 4135146178548881602}
   hitsToDestroy: 2
   points: 20
+  bonusPrefab: {fileID: 8732419021563740001, guid: b0a51d3f8c1e4b3a9d7c5e2f6a4b8c10, type: 3}

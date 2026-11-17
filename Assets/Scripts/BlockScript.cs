@@ -9,6 +9,7 @@ public class BlockScript : MonoBehaviour
     Text textComponent;  // TMP_Text textComponent; 
     public int hitsToDestroy; 
     public int points;
+    public GameObject bonusPrefab;
     PlayerScript playerScript;
 
     // Start is called before the first frame update
@@ -29,7 +30,13 @@ public class BlockScript : MonoBehaviour
             if (hitsToDestroy == 0)
             {
                 print(points);
+                var position = transform.position;
                 Destroy(gameObject);
+                if (bonusPrefab != null)
+                {
+                    var bonus = Instantiate(bonusPrefab, position, Quaternion.identity);
+                    bonus.AddComponent<BonusBase>();
+                }
                 playerScript.BlockDestroyed(points);
             }
             else if (textComponent != null)
