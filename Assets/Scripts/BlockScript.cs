@@ -26,8 +26,13 @@ public class BlockScript : MonoBehaviour
     void OnCollisionEnter2D(Collision2D collision) 
     { 
         { 
-            hitsToDestroy--;
-            if (hitsToDestroy == 0)
+            int damage = 1;
+            var ball = collision.gameObject.GetComponent<BallScript>();
+            if (ball != null)
+                damage = ball.damage;
+
+            hitsToDestroy -= damage;
+            if (hitsToDestroy <= 0)
             {
                 print(points);
                 var position = transform.position;

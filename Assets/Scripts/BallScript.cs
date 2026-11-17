@@ -5,6 +5,7 @@ using UnityEngine;
 public class BallScript : MonoBehaviour
 {
     public Vector2 ballInitialForce;
+    public int damage = 1;
     Rigidbody2D rb;
     GameObject playerObj; 
     float deltaX;
@@ -59,6 +60,14 @@ public class BallScript : MonoBehaviour
             ballInitialForce *= multiplier;
         else
             rigidbody2D.velocity *= multiplier;
+    }
+
+    public void SetDamage(int newDamage, Color color)
+    {
+        damage = newDamage;
+        var spriteRenderer = GetComponent<SpriteRenderer>();
+        if (spriteRenderer != null)
+            spriteRenderer.color = color;
     }
 
     void OnTriggerEnter2D(Collider2D other) 

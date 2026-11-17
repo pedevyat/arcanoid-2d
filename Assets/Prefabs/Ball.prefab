@@ -137,5 +137,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ballInitialForce: {x: 100, y: 300}
+  damage: 1
   hitSound: {fileID: 8300000, guid: 14d55864887492f4d841108c642dcb99, type: 3}
   loseSound: {fileID: 8300000, guid: 358b7a9b51b57754a91ddd92aca6b46c, type: 3}

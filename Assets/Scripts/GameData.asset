@@ -21,3 +21,6 @@ MonoBehaviour:
   ballBonusWeight: 20
   plus2BonusWeight: 20
   plus10BonusWeight: 20
+  fireBonusWeight: 20
+  steelBonusWeight: 20
+  normBonusWeight: 20

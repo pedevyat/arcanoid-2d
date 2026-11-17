@@ -73,6 +73,16 @@ public class PlayerScript : MonoBehaviour
         }
     }
 
+    public void SetBallsDamage(int damage, Color color)
+    {
+        foreach (var ballObject in GameObject.FindGameObjectsWithTag("Ball"))
+        {
+            var ball = ballObject.GetComponent<BallScript>();
+            if (ball != null)
+                ball.SetDamage(damage, color);
+        }
+    }
+
     public void CreateBonus(Vector3 position, GameObject bonusPrefab)
     {
         if (bonusPrefab == null)
@@ -96,6 +106,15 @@ public class PlayerScript : MonoBehaviour
                 break;
             case BonusType.Plus10:
                 bonusBase = bonus.AddComponent<Plus10Bonus>();
+                break;
+            case BonusType.Fire:
+                bonusBase = bonus.AddComponent<FireBonus>();
+                break;
+            case BonusType.Steel:
+                bonusBase = bonus.AddComponent<SteelBonus>();
+                break;
+            case BonusType.Norm:
+                bonusBase = bonus.AddComponent<NormBonus>();
                 break;
         }
 

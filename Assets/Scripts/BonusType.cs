@@ -4,5 +4,8 @@ public enum BonusType
     Fast,
     Ball,
     Plus2,
-    Plus10
+    Plus10,
+    Fire,
+    Steel,
+    Norm
 }
