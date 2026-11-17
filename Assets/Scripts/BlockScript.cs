@@ -27,12 +27,11 @@ public class BlockScript : MonoBehaviour
     void OnCollisionEnter2D(Collision2D collision) 
     { 
         { 
-            int damage = 1;
             var ball = collision.gameObject.GetComponent<BallScript>();
-            if (ball != null)
-                damage = ball.damage;
+            if (ball == null)
+                return;
 
-            hitsToDestroy -= damage;
+            hitsToDestroy -= ball.damage;
             if (hitsToDestroy <= 0)
             {
                 print(points);
