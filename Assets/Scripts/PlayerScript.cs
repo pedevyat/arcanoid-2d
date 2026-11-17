@@ -40,13 +40,67 @@ public class PlayerScript : MonoBehaviour
         int count = 2;
         if (gameData.balls == 1)
             count = 1;
+        CreateBalls(count, false);
+    }
+
+    void CreateBalls(int count, bool launchImmediately)
+    {
         for (int i = 0; i < count; i++)
         { 
             var obj = Instantiate(ballPrefab); 
             var ball = obj.GetComponent<BallScript>();
             ball.ballInitialForce += new Vector2(10 * i, 0);
             ball.ballInitialForce *= 1 + level * ballVelocityMult;
+            if (launchImmediately)
+                ball.Launch();
         } 
+    }
+
+    public void AddBalls(int count, bool spawnImmediately)
+    {
+        gameData.balls += count;
+        if (spawnImmediately)
+            CreateBalls(count, true);
+    }
+
+    public void ChangeBallsSpeed(float multiplier)
+    {
+        foreach (var ballObject in GameObject.FindGameObjectsWithTag("Ball"))
+        {
+            var ball = ballObject.GetComponent<BallScript>();
+            if (ball != null)
+                ball.ChangeSpeed(multiplier);
+        }
+    }
+
+    public void CreateBonus(Vector3 position, GameObject bonusPrefab)
+    {
+        if (bonusPrefab == null)
+            return;
+
+        var bonus = Instantiate(bonusPrefab, position, Quaternion.identity);
+        BonusBase bonusBase = null;
+        switch (gameData.GetRandomBonus())
+        {
+            case BonusType.Slow:
+                bonusBase = bonus.AddComponent<SlowBonus>();
+                break;
+            case BonusType.Fast:
+                bonusBase = bonus.AddComponent<FastBonus>();
+                break;
+            case BonusType.Ball:
+                bonusBase = bonus.AddComponent<BallBonus>();
+                break;
+            case BonusType.Plus2:
+                bonusBase = bonus.AddComponent<Plus2Bonus>();
+                break;
+            case BonusType.Plus10:
+                bonusBase = bonus.AddComponent<Plus10Bonus>();
+                break;
+        }
+
+        if (bonusBase != null)
+            bonusBase.RefreshAppearance();
     }
 
     void SetBackground() 

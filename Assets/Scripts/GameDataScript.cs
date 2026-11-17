@@ -13,6 +13,34 @@ public class GameDataScript : ScriptableObject
     public bool sound = true;
     public int pointsToBall = 0;
 
+    [Header("Bonus appearance weights")]
+    public int slowBonusWeight = 20;
+    public int fastBonusWeight = 20;
+    public int ballBonusWeight = 20;
+    public int plus2BonusWeight = 20;
+    public int plus10BonusWeight = 20;
+
+    public BonusType GetRandomBonus()
+    {
+        int totalWeight = slowBonusWeight + fastBonusWeight + ballBonusWeight +
+                          plus2BonusWeight + plus10BonusWeight;
+
+        if (totalWeight <= 0)
+            return BonusType.Ball;
+
+        int value = Random.Range(0, totalWeight);
+
+        if ((value -= slowBonusWeight) < 0)
+            return BonusType.Slow;
+        if ((value -= fastBonusWeight) < 0)
+            return BonusType.Fast;
+        if ((value -= ballBonusWeight) < 0)
+            return BonusType.Ball;
+        if ((value -= plus2BonusWeight) < 0)
+            return BonusType.Plus2;
+        return BonusType.Plus10;
+    }
+
     public void Reset()
     { 
         level = 1; 

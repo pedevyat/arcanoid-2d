@@ -7,7 +7,22 @@ public class BonusBase : MonoBehaviour
     public Color backgroundColor = Color.yellow;
     public Color textColor = Color.black;
 
-    void Start()
+    protected virtual void Configure()
+    {
+    }
+
+    void Awake()
+    {
+        RefreshAppearance();
+    }
+
+    public void RefreshAppearance()
+    {
+        Configure();
+        ApplyAppearance();
+    }
+
+    protected void ApplyAppearance()
     {
         var spriteRenderer = GetComponent<SpriteRenderer>();
         if (spriteRenderer != null)
@@ -21,11 +36,17 @@ public class BonusBase : MonoBehaviour
         }
     }
 
-    public virtual void BonusActivate()
+    protected PlayerScript GetPlayerScript()
     {
         var player = GameObject.FindGameObjectWithTag("Player");
-        if (player != null)
-            player.GetComponent<PlayerScript>().BlockDestroyed(100);
+        return player != null ? player.GetComponent<PlayerScript>() : null;
+    }
+
+    public virtual void BonusActivate()
+    {
+        var playerScript = GetPlayerScript();
+        if (playerScript != null)
+            playerScript.BlockDestroyed(100);
         Destroy(gameObject);
     }
 }

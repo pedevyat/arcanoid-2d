@@ -33,10 +33,7 @@ public class BlockScript : MonoBehaviour
                 var position = transform.position;
                 Destroy(gameObject);
                 if (bonusPrefab != null)
-                {
-                    var bonus = Instantiate(bonusPrefab, position, Quaternion.identity);
-                    bonus.AddComponent<BonusBase>();
-                }
+                    playerScript.CreateBonus(position, bonusPrefab);
                 playerScript.BlockDestroyed(points);
             }
             else if (textComponent != null)

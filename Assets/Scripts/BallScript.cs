@@ -27,10 +27,7 @@ public class BallScript : MonoBehaviour
     {
         if (rb.isKinematic) 
             if (Input.GetButtonDown("Fire1")) 
-            { 
-                rb.isKinematic = false; 
-                rb.AddForce(ballInitialForce); 
-            } 
+                Launch();
             else 
             { 
                 var pos = transform.position;
@@ -46,6 +43,22 @@ public class BallScript : MonoBehaviour
                 v.Set(v.x + 0.1f, v.y - 0.1f); 
             rb.velocity = v;
         }
+    }
+
+    public void Launch()
+    {
+        var rigidbody2D = GetComponent<Rigidbody2D>();
+        rigidbody2D.isKinematic = false;
+        rigidbody2D.AddForce(ballInitialForce);
+    }
+
+    public void ChangeSpeed(float multiplier)
+    {
+        var rigidbody2D = GetComponent<Rigidbody2D>();
+        if (rigidbody2D.isKinematic)
+            ballInitialForce *= multiplier;
+        else
+            rigidbody2D.velocity *= multiplier;
     }
 
     void OnTriggerEnter2D(Collider2D other) 
