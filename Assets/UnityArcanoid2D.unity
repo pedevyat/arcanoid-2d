@@ -866,6 +866,7 @@ MonoBehaviour:
   ballPrefab: {fileID: 5827183523335844315, guid: fc8aa8baf3d83534991992b802cea75f, type: 3}
   gameData: {fileID: 11400000, guid: d51959aecda08524d82f5634b58435d9, type: 2}
   pointSound: {fileID: 8300000, guid: cdd0167a8e237324b9d38610469434b3, type: 3}
+  sticky: 0
 --- !u!1 &1884992046
 GameObject:
   m_ObjectHideFlags: 0

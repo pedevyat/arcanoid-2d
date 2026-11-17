@@ -215,12 +215,23 @@ public class PlayerScript : MonoBehaviour
     IEnumerator BlockDestroyedCoroutine() 
     { 
         yield return new WaitForSeconds(0.1f); 
-        if (GameObject.FindGameObjectsWithTag("Block").Length == 0)
+        if (!LevelBlocksRemain())
         { 
             if (level < maxLevel) 
                 gameData.level++; 
             SceneManager.LoadScene("UnityArcanoid2D"); 
         }
+    }
+
+    bool LevelBlocksRemain()
+    {
+        foreach (var block in GameObject.FindGameObjectsWithTag("Block"))
+        {
+            var blockScript = block.GetComponent<BlockScript>();
+            if (blockScript == null || blockScript.countsForLevelCompletion)
+                return true;
+        }
+        return false;
     }
 
     IEnumerator BlockDestroyedCoroutine2() 

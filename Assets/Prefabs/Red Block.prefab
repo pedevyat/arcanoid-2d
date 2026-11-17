@@ -208,6 +208,7 @@ MonoBehaviour:
   textObject: {fileID: 8788894939150085687}
   hitsToDestroy: 4
   points: 40
+  countsForLevelCompletion: 1
 --- !u!1 &8788894940373039130
 GameObject:
   m_ObjectHideFlags: 0

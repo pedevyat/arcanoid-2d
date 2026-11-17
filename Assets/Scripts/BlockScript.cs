@@ -9,6 +9,7 @@ public class BlockScript : MonoBehaviour
     Text textComponent;  // TMP_Text textComponent; 
     public int hitsToDestroy; 
     public int points;
+    public bool countsForLevelCompletion = true;
     public GameObject bonusPrefab;
     PlayerScript playerScript;
 

@@ -229,3 +229,4 @@ MonoBehaviour:
   textObject: {fileID: 0}
   hitsToDestroy: 30
   points: 100
+  countsForLevelCompletion: 0
