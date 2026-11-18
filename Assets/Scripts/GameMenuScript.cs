@@ -136,6 +136,12 @@ public class GameMenuScript : MonoBehaviour
         Time.timeScale = 0f;
         Cursor.visible = true;
         SyncControls();
+
+        if (nameInput != null)
+        {
+            nameInput.Select();
+            nameInput.ActivateInputField();
+        }
     }
 
     public void ShowGameOver(int finalScore)
@@ -538,6 +544,11 @@ public class GameMenuScript : MonoBehaviour
         input.textComponent = text;
         input.placeholder = placeholder;
         input.text = gameData != null ? gameData.playerName : "Игрок";
+
+        input.customCaretColor = true;
+        input.caretColor = Color.white;
+        input.caretWidth = 2;
+        input.selectionColor = new Color(0.3f, 0.6f, 1f, 0.5f);
 
         return input;
     }
