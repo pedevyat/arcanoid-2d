@@ -566,7 +566,10 @@ public class PlayerScript : MonoBehaviour
 
         var mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         var pos = transform.position;
-        pos.x = mousePos.x;
+        var cam = Camera.main;
+        float halfWidth = cam.orthographicSize * cam.aspect;
+        float paddleHalf = GetComponent<Collider2D>().bounds.extents.x;
+        pos.x = Mathf.Clamp(mousePos.x, -halfWidth + paddleHalf, halfWidth - paddleHalf);
         transform.position = pos;
 
         if (weaponMode != WeaponMode.None && Input.GetButtonDown("Fire1") && Time.time >= nextFireTime)
